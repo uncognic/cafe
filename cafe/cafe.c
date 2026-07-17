@@ -2,19 +2,16 @@
 #include <windows.h>
 #include <shellapi.h>
 
-namespace
-{
-    constexpr UINT WM_TRAYICON = WM_USER + 1;
+#define WM_TRAYICON (WM_USER + 1)
 
-    constexpr UINT ID_NORMAL = 100;
-    constexpr UINT ID_SYSTEM = 101;
-    constexpr UINT ID_SYSTEM_LCD = 102;
-    constexpr UINT ID_EXIT = 200;
+#define ID_NORMAL 100
+#define ID_SYSTEM 101
+#define ID_SYSTEM_LCD 102
+#define ID_EXIT 200
 
-    NOTIFYICONDATA nid{};
-    HMENU menu{};
-    EXECUTION_STATE current{};
-}
+static NOTIFYICONDATA nid;
+static HMENU menu;
+static EXECUTION_STATE current = 0;
 
 void apply_state(EXECUTION_STATE state)
 {
@@ -22,7 +19,7 @@ void apply_state(EXECUTION_STATE state)
     SetThreadExecutionState(ES_CONTINUOUS | state);
 }
 
-void rebuild_menu()
+void rebuild_menu(void)
 {
     CheckMenuItem(menu, ID_NORMAL,
                   MF_BYCOMMAND | (current == 0 ? MF_CHECKED : MF_UNCHECKED));
@@ -51,7 +48,7 @@ LRESULT CALLBACK wndproc(HWND hwnd, UINT msg, WPARAM w, LPARAM l)
                 menu,
                 TPM_RIGHTBUTTON,
                 p.x, p.y,
-                0, hwnd, nullptr);
+                0, hwnd, NULL);
         }
         break;
 
@@ -81,41 +78,41 @@ LRESULT CALLBACK wndproc(HWND hwnd, UINT msg, WPARAM w, LPARAM l)
     return DefWindowProc(hwnd, msg, w, l);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+int WINAPI WinMain(HINSTANCE h, HINSTANCE _, LPSTR __, int ___)
 {
-    WNDCLASS wc{};
+    WNDCLASS wc = {0};
     wc.lpfnWndProc = wndproc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = L"awake_tray";
+    wc.hInstance = h;
+    wc.lpszClassName = "awake_tray";
 
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindow(
         wc.lpszClassName,
-        L"",
+        "",
         0, 0, 0, 0, 0,
         HWND_MESSAGE,
-        nullptr, hInstance, nullptr);
+        NULL, h, NULL);
 
     menu = CreatePopupMenu();
-    AppendMenu(menu, MF_STRING, ID_NORMAL, L"Normal");
-    AppendMenu(menu, MF_STRING, ID_SYSTEM, L"Keep system awake");
-    AppendMenu(menu, MF_STRING, ID_SYSTEM_LCD, L"Keep system + screen awake");
-    AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
-    AppendMenu(menu, MF_STRING, ID_EXIT, L"Exit");
+    AppendMenu(menu, MF_STRING, ID_NORMAL, "Normal");
+    AppendMenu(menu, MF_STRING, ID_SYSTEM, "Keep system awake");
+    AppendMenu(menu, MF_STRING, ID_SYSTEM_LCD, "Keep system + screen awake");
+    AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+    AppendMenu(menu, MF_STRING, ID_EXIT, "Exit");
 
     nid.cbSize = sizeof(nid);
     nid.hWnd = hwnd;
     nid.uID = 1;
     nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
     nid.uCallbackMessage = WM_TRAYICON;
-    nid.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-    wcscpy_s(nid.szTip, L"Cafe");
+    nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    lstrcpy(nid.szTip, "Cafe");
 
     Shell_NotifyIcon(NIM_ADD, &nid);
 
     MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0))
+    while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
